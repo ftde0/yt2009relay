@@ -1,0 +1,17 @@
+{
+  "name": "yt2009relay",
+  "version": "1.0.0",
+  "description": "relay for 2009 frontend",
+  "main": "yt2009relay.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "express": "latest",
+    "ytdl-core": "latest",
+    "cors": "latest"
+  },
+  "author": "dxegom",
+  "license": "ISC"
+}
