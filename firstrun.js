@@ -8,7 +8,7 @@ module.exports = {
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "en-US,en;q=0.9",
         "cache-control": "max-age=0",
-        "cookie": config.cookie,
+        "cookie": config.cookie.replace(/[^\t\x20-\x7e\x80-\xff]/gm, ""),
         "dnt": "1",
         "sec-fetch-dest": "document",
         "sec-fetch-mode": "navigate",
@@ -42,7 +42,11 @@ module.exports = {
             let itContext = JSON.parse(
                 r.split(`"INNERTUBE_CONTEXT":`)[1].split(`}}`)[0] + "}}"
             )
-            let itSession = r.split(`"DELEGATED_SESSION_ID":"`)[1].split(`"`)[0]
+            let itSession = ""
+            try {
+                itSession = r.split(`"DELEGATED_SESSION_ID":"`)[1].split(`"`)[0]
+            }
+            catch(error) {console.log(error)}
             initialUserdata.itKey = itApiKey;
             initialUserdata.itContext = itContext;
             initialUserdata.session = itSession;

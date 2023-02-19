@@ -23,10 +23,10 @@ module.exports = {
         return tr;
     },
     "createInnertubeHeaders": function(cookie, context, session, useragent) {
-        return {
+        let headers = {
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-US,en;q=0.9",
-            "Authorization": "SAPISIDHASH " + this.getAuthorization(cookie),
+            "authorization": "SAPISIDHASH " + this.getAuthorization(cookie),
             "cache-control": "max-age=0",
             "cookie": cookie,
             "dnt": "1",
@@ -35,13 +35,16 @@ module.exports = {
             "sec-fetch-site": "same-origin",
             "user-agent": useragent,
             "x-goog-authuser": "0",
-            "x-goog-pageid": session,
             "x-goog-visitor-id": context.client.visitorData,
             "x-youtube-bootstrap-logged-in": "true",
             "x-youtube-client-name": "1",
             "x-youtube-client-version": context.client.clientVersion,
             "x-origin": "https://www.youtube.com"
         }
+        if(session) {
+            headers["x-goog-pageid"] = session
+        }
+        return headers;
     },
     "commentParamFromVideoId": function(videoId, cookie, context,
                                         session, userAgent, apiKey,
