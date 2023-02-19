@@ -4,6 +4,7 @@ for use with the 2009 frontend, if you have access.
 ---
 
 ## setup
+- install node.js if you don't have it already
 - in your repo directory, rename **example-config.json** to **config.json**
 - fill out your config.
 	---
