@@ -2,6 +2,7 @@ const fetch = require("node-fetch")
 const utils = require("./utils")
 const config = require("./config.json")
 const fs = require("fs")
+const test = false;
 
 module.exports = {
     "browserHeaders": {
@@ -39,6 +40,7 @@ module.exports = {
         }).then(r => {r.text().then(r => {
             // innertube access things
             let itApiKey = r.split(`"INNERTUBE_API_KEY":"`)[1].split(`"`)[0]
+            let authUser = "0"
             let itContext = JSON.parse(
                 r.split(`"INNERTUBE_CONTEXT":`)[1].split(`}}`)[0] + "}}"
             )
@@ -46,17 +48,34 @@ module.exports = {
             try {
                 itSession = r.split(`"DELEGATED_SESSION_ID":"`)[1].split(`"`)[0]
             }
-            catch(error) {console.log(error)}
+            catch(error) {}
+            try {
+                authUser = r.split("authuser")[1]
+                            .split(`"`)[0]
+                            .split("\\u003d")[1]
+            }
+            catch(error) {}
             initialUserdata.itKey = itApiKey;
             initialUserdata.itContext = itContext;
             initialUserdata.session = itSession;
+            initialUserdata.authUser = authUser;
             // cache username + handle (if available)
+            if(test) {
+                console.log(utils.createInnertubeHeaders(
+                    config.cookie,
+                    itContext,
+                    itSession,
+                    config.useragent,
+                    authUser
+                ))
+            }
             fetch(`https://www.youtube.com/youtubei/v1/account/account_menu?key=${itApiKey}`, {
                 "headers": utils.createInnertubeHeaders(
                     config.cookie,
                     itContext,
                     itSession,
-                    config.useragent
+                    config.useragent,
+                    authUser
                 ),
                 "method": "POST",
                 "body": JSON.stringify({

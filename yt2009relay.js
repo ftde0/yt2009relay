@@ -16,6 +16,7 @@ const playlists = require("./playlists")
 
 
 let userdata = {
+    "authUser": "",
     "itKey": "",
     "itContext": {},
     "session": "",

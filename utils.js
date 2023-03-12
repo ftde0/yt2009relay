@@ -12,7 +12,7 @@ module.exports = {
 
         let unix = Math.floor(new Date().getTime() / 1000)
         if(!cookie.includes("SAPISID=")) return ""
-        let sapisid = cookie.split("; SAPISID=")[1].split(";")[0]
+        let sapisid = cookie.split("SAPISID=")[1].split(";")[0]
         let origin = "https://www.youtube.com";
         let tr = unix + "_"
 
@@ -22,7 +22,7 @@ module.exports = {
 
         return tr;
     },
-    "createInnertubeHeaders": function(cookie, context, session, useragent) {
+    "createInnertubeHeaders": function(cookie, context, session, useragent, authuser) {
         let headers = {
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-US,en;q=0.9",
@@ -34,7 +34,7 @@ module.exports = {
             "sec-fetch-mode": "navigate",
             "sec-fetch-site": "same-origin",
             "user-agent": useragent,
-            "x-goog-authuser": "0",
+            "x-goog-authuser": authuser,
             "x-goog-visitor-id": context.client.visitorData,
             "x-youtube-bootstrap-logged-in": "true",
             "x-youtube-client-name": "1",
@@ -48,7 +48,7 @@ module.exports = {
     },
     "commentParamFromVideoId": function(videoId, cookie, context,
                                         session, userAgent, apiKey,
-                                        callback) {
+                                        authuser, callback) {
         // get innertube comment param by just the video id by navigating to it
         // and extracting the param to send a comment.
 
@@ -56,7 +56,8 @@ module.exports = {
             cookie,
             context,
             session,
-            userAgent
+            userAgent,
+            authuser
         )
 
         // fetch video
@@ -118,12 +119,13 @@ module.exports = {
     },
     "fetchGuide": function(cookie, context,
                            session, userAgent, apiKey,
-                           callback) {
+                           authuser, callback) {
         let headers = this.createInnertubeHeaders(
             cookie,
             context,
             session,
-            userAgent
+            userAgent,
+            authuser
         )
 
         fetch("https://www.youtube.com/youtubei/v1/guide?key=" + apiKey, {

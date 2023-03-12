@@ -37,7 +37,8 @@ module.exports = {
                             config.cookie,
                             userdata.itContext,
                             userdata.session,
-                            config.useragent
+                            config.useragent,
+                            userdata.authUser
                         ),
                         "method": "POST",
                         "body": JSON.stringify({

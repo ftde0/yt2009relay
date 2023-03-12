@@ -15,7 +15,9 @@ for use with the 2009 frontend, if you have access.
 		* if everything went right, your devtools should look like this: <img src="readme-imgs/devtools-network.png"/>
 		- click on the request that was completed (in this case `account_menu?key=...`)
 		- make sure you are on the Headers tab, scroll down until you see a **Cookie** header in the **Request Headers** dropdown.
-		- copy the entire **Cookie** content and paste it to the relay config.
+		- right click the **Cookie** content and press **Copy**/**Copy value**. __DO NOT CTRL+C!__
+		
+		(if using Firefox, make sure you remove the leading `Cookie: ` from the copied value)
 
 		### **don't share your cookie with anyone! they can use it to access your yt account.**
 	---
