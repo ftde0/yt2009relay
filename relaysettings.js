@@ -31,6 +31,7 @@ module.exports = {
                     userdata.session,
                     config.useragent,
                     userdata.itKey,
+                    userdata.authUser || 0,
                     (data) => {
                         guideCache = data;
                         applySettings()

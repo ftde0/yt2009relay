@@ -23,6 +23,9 @@ module.exports = {
         return tr;
     },
     "createInnertubeHeaders": function(cookie, context, session, useragent, authuser) {
+        if(!authuser) {
+            authuser = 0;
+        }
         let headers = {
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-US,en;q=0.9",
