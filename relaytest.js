@@ -25,16 +25,22 @@ module.exports = {
         =======
         */
         app.get("/relay_test_yt", (req, res) => {
-            const userdata = require("./userdata.json")
+            const userdata = JSON.parse(
+                require("fs").readFileSync("./userdata.json").toString()
+            )
             if(req.headers.auth !== userdata.code) {
                 res.sendStatus(401)
                 return;
             }
             if(userdata.usernameCache) {
-                res.send({
+                let response = {
                     "username": userdata.usernameCache,
                     "handle": userdata.handleCache
-                })
+                }
+                if(userdata.playlists) {
+                    response.playlists = userdata.playlists;
+                }
+                res.send(response)
             } else {
                 res.send(404)
             }

@@ -22,13 +22,14 @@ module.exports = {
                                         .split("&")[0]
                                         .split("#")[0]
             
-            // get comment param used to post a commend
+            // get comment param used to post a comment
             utils.commentParamFromVideoId(
                 id, config.cookie,
                 userdata.itContext,
                 userdata.session,
                 config.useragent,
                 userdata.itKey,
+                userdata.authUser || 0,
             (data) => {
                 setTimeout(function() {
                     // comment!!
@@ -47,7 +48,7 @@ module.exports = {
                             "createCommentParams": data
                         })
                     }).then(r => {r.json().then(r => {
-                        res.send("")
+                        res.send(utils.simComment(commentText))
                         console.log(`comment posted via relay to ${id}, with text ${commentText}`)
                     })})
                 }, 1753)

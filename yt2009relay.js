@@ -10,6 +10,7 @@ const config = require("./config.json")
 const firstrun = require("./firstrun")
 const relaytest = require("./relaytest")
 const relaysettings = require("./relaysettings")
+const notifications = require("./notifications")
 const comments = require("./comments")
 const playlists = require("./playlists")
 
@@ -53,6 +54,7 @@ relaytest.addRelayTestEndpoints(app)
 relaysettings.addRelaySettingsEndpoints(app)
 comments.addCommentEndpoint(app)
 playlists.addPlaylistEndpoints(app)
+notifications.addNotifEndpoints(app)
 
 /*
 =======

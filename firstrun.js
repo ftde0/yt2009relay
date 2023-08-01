@@ -103,6 +103,15 @@ module.exports = {
                 console.log("created userdata, saved to userdata.json")
 
                 callback(initialUserdata)
+
+                // playlists
+                utils.getPlaylists((p) => {
+                    initialUserdata.playlists = p;
+                    fs.writeFileSync(
+                        "userdata.json",
+                        JSON.stringify(initialUserdata)
+                    )
+                })
             })})
         })})
     }

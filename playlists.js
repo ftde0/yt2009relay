@@ -43,8 +43,7 @@ module.exports = {
             const userdata = require("./userdata.json")
 
             if(req.headers.auth !== userdata.code
-            || !userdata.usernameCache
-            || !userdata.uiSettings.includes("relay-playlists-sync")) {
+            || !userdata.usernameCache) {
                 res.sendStatus(401)
                 return;
             }
@@ -80,8 +79,7 @@ module.exports = {
             const userdata = require("./userdata.json")
 
             if(req.headers.auth !== userdata.code
-            || !userdata.usernameCache
-            || !userdata.uiSettings.includes("relay-create-favorites")) {
+            || !userdata.usernameCache) {
                 res.sendStatus(401)
                 return;
             }

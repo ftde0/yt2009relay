@@ -120,9 +120,10 @@ module.exports = {
             }, 166)
         }
     },
-    "fetchGuide": function(cookie, context,
-                           session, userAgent, apiKey,
-                           authuser, callback) {
+    "getVideo":  function(
+    videoId, cookie, context,
+    session, userAgent, apiKey,
+    authuser, callback) {
         let headers = this.createInnertubeHeaders(
             cookie,
             context,
@@ -130,114 +131,186 @@ module.exports = {
             userAgent,
             authuser
         )
-
-        fetch("https://www.youtube.com/youtubei/v1/guide?key=" + apiKey, {
+    
+        // fetch video
+        fetch(`https://www.youtube.com/youtubei/v1/player?key=${apiKey}`, {
             "headers": headers,
-            "referrer": `https://www.youtube.com/`,
+            "referrer": `https://www.youtube.com/watch?v=${videoId}`,
             "referrerPolicy": "origin-when-cross-origin",
             "body": JSON.stringify({
+                "autonavState": "STATE_OFF",
+                "captionsRequested": false,
+                "contentCheckOk": false,
                 "context": context,
-                "fetchLiveState": true
+                "playbackContext": {
+                    "lactMilliseconds": "-1",
+                    "vis": 0
+                },
+                "racyCheckOk": false,
+                "videoId": videoId
             }),
             "method": "POST",
-            "mode": "cors",
-            "credentials": "include"
-        }).then(res => {res.json().then(r => {
-            callback(r)
-        })})
+            "mode": "cors"
+        }).then(r => r.json().then(r => {
+            // will just update this code if more is needed
+            let data = {
+                "title": r.videoDetails.title,
+                "description": r.videoDetails.shortDescription
+            }
+            callback(data)
+        }))
     },
-    "guideGetPlaylists": function(guide) {
-        let playlists = []
-        guide.items.forEach(item => {
-            if(item.guideSectionRenderer) {
-                item.guideSectionRenderer.items.forEach(sectionRenderer => {
-                    if(sectionRenderer.guideCollapsibleSectionEntryRenderer) {
-                        sectionRenderer.guideCollapsibleSectionEntryRenderer
-                        .sectionItems.forEach(sectionItem => {
-                            try {
-                                if(sectionItem.guideEntryRenderer
-                                && sectionItem.guideEntryRenderer
-                                .icon.iconType == "PLAYLISTS") {
-                                    item = sectionItem.guideEntryRenderer
-                                    playlists.push({
-                                        "name": item.formattedTitle.simpleText,
-                                        "id": item.entryData
-                                                  .guideEntryData.guideEntryId
-                                    })
-                                }
+
+    "relativeToAbs": function(relDate) {
+        function jsDateToString(jsd) {
+            let months = ["Jan", "Feb", "Mar",
+                          "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep",
+                          "Oct", "Nov", "Dec"]
+            return months[jsd.getMonth()]
+                   + " " + jsd.getDate()
+                   + ", " + jsd.getFullYear()
+        }
+
+        let d = new Date()
+        let dayUnix = (1000 * 60 * 60 * 24)
+        if(relDate.includes("day")) {
+            let dayCount = relDate.split(" ")[0]
+            d = new Date(Date.now() - (dayCount * dayUnix))
+        } else if(relDate.includes("week")) {
+            let weekCount = relDate.split(" ")[0]
+            d = new Date(Date.now() - (weekCount * dayUnix * 7))
+        } else if(relDate.includes("month")) {
+            let moCount = relDate.split(" ")[0]
+            d = new Date(Date.now() - (moCount * dayUnix * 31))
+        }
+
+        return jsDateToString(d)
+    },
+
+    "getUserId": function(callback) {
+        let userdata = require("./userdata.json");
+        let config = require("./config.json")
+        let h = this.createInnertubeHeaders(
+            config.cookie,
+            userdata.itContext,
+            userdata.session,
+            config.useragent,
+            userdata.authUser || 0
+        )
+        fetch(`https://www.youtube.com/${userdata.handleCache}`, {
+            "headers": h,
+            "referrer": `https://www.youtube.com/`,
+            "referrerPolicy": "origin-when-cross-origin",
+            "body": null,
+            "method": "GET",
+            "mode": "cors"
+        }).then(r => r.text().then(r => {
+            let id = r.split(`rel="canonical" href="`)[1].split("\"")[0]
+            callback(id.split("/channel/")[1])
+        }))
+    },
+
+    "getPlaylists": function(callback) {
+        let userdata = require("./userdata.json");
+        let config = require("./config.json")
+        this.getUserId(id => {
+            fetch("https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", {
+                "headers": this.createInnertubeHeaders(
+                    config.cookie,
+                    userdata.itContext,
+                    userdata.session,
+                    config.useragent,
+                    userdata.authUser || 0
+                ),
+                "referrer": "https://www.youtube.com/@uh00/playlists",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": JSON.stringify({
+                    "context": userdata.itContext,
+                    "browseId": id,
+                    "params": "EglwbGF5bGlzdHPyBgQKAkIA"
+                }),
+                "method": "POST",
+                "mode": "cors"
+            }).then(r => {r.json().then(r => {
+                callback(parsePlaylists(r))
+            })})
+        })
+        function parsePlaylists(r) {
+            let rawPlaylists = []
+            let parsedPlaylists = []
+
+            // this needs to be written better.
+            // ONE DAY.
+            r.contents.twoColumnBrowseResultsRenderer.tabs.forEach(tab => {
+                if(tab.tabRenderer
+                && tab.tabRenderer.selected) {
+                    tab = tab.tabRenderer.content
+                    try {
+                        tab.sectionListRenderer.contents.forEach(s => {
+                            s = s.itemSectionRenderer.contents[0]
+                            if(s.gridRenderer) {
+                                s.gridRenderer.items.forEach(i => {
+                                    rawPlaylists.push(i)
+                                })
                             }
-                            catch(error) {console.log(error)}
-                            if(sectionItem.guideCollapsibleEntryRenderer) {
-                                handleExpandableItems(
-                                    sectionItem.guideCollapsibleEntryRenderer
-                                               .expandableItems
-                                )
-                            }
-                            
                         })
                     }
-                })
-            }
-        }) 
-        // move over the further handle so this doesnt pile up
-        // infinitely
-        function handleExpandableItems(expandableItems) {
-            expandableItems.forEach(item => {
-                item = item.guideEntryRenderer
-                if(item.icon.iconType == "PLAYLISTS") {
-                    playlists.push({
-                        "name": item.formattedTitle.simpleText,
-                        "id": item.entryData
-                              .guideEntryData.guideEntryId
-                    })
+                    catch(error) {console.log(error + `
+                    
+                    =========
+                    above error may have caused your playlists
+                    to sync incorrectly!
+                    please report that one on #yt2009-feedback.
+                    =========
+
+                    `)}
                 }
             })
-        }
 
-        return playlists;
-    },
-    "guideGetSubscriptions": function(guide) {
-        let subscriptions = []
-        guide.items.forEach(section => {
-            if(section.guideSubscriptionsSectionRenderer) {
-                section = section.guideSubscriptionsSectionRenderer
-                section.items.forEach(item => {
-                    // channels!! (hope)
-                    if(item.guideEntryRenderer) {
-                        item = item.guideEntryRenderer
-                        addSubscription(item)
-                    } else if(item.guideCollapsibleEntryRenderer) {
-                        item = item.guideCollapsibleEntryRenderer
-                        // more items!!!
-                        item.expandableItems.forEach(subscription => {
-                            subscription = subscription
-                                           .guideEntryRenderer
-                            if(!subscription.icon) {
-                                addSubscription(subscription)
-                            }
-                            
-                        })
-                    }
+
+            rawPlaylists.forEach(p => {
+                if(!p.gridPlaylistRenderer) return;
+                parsedPlaylists.push({
+                    "name": p.gridPlaylistRenderer.title.runs[0].text,
+                    "id": p.gridPlaylistRenderer.playlistId
                 })
-            }
-        })
-
-        // actually push a subscription
-        function addSubscription(item) {
-            if(item.guideEntryRenderer) {
-                item = item.guideEntryRenderer
-            }
-            subscriptions.push({
-                "creator": item.formattedTitle.simpleText,
-                "id": item.entryData.guideEntryData
-                      .guideEntryId,
-                "url": item.navigationEndpoint
-                              .browseEndpoint
-                              .canonicalBaseUrl
             })
+
+            return parsedPlaylists;
         }
+    },
 
-
-        return subscriptions;
+    "simComment": function(content) {
+        let userdata = require("./userdata.json")
+        return `
+    <div class="watch-comment-entry">
+        <div class="watch-comment-head">
+            <div class="watch-comment-info">
+                <a class="watch-comment-auth" href="#" rel="nofollow">${
+                    userdata.handleCache.replace("@", "")
+                }</a>
+                <span class="watch-comment-time"> 1 minute ago </span>
+            </div>
+            <div class="watch-comment-voting">
+                <span class="watch-comment-score watch-comment-gray">0</span>
+                <a href="#"><button class="master-sprite watch-comment-down-hover" title="Poor comment"></button></a>
+                <a href="#"><button class="master-sprite watch-comment-up-hover" title="Good comment"></button></a>
+                <span class="watch-comment-msg"></span>
+            </div>
+            <span class="watch-comment-spam-bug">Marked as spam</span>
+            <div class="watch-comment-action">
+                <a>Reply</a>
+                |
+                <a title="Flag this comment as Spam">Spam</a>
+            </div>
+            <div class="clearL"></div>
+        </div>
+    
+        <div>
+            <div class="watch-comment-body"><div>${content}</div></div>
+            <div></div>
+        </div>
+    </div>`
     }
 }
